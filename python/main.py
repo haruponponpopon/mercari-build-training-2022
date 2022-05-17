@@ -28,7 +28,6 @@ def root():
 @app.post("/items")
 def add_item(name: str = Form(...), category: str = Form(...)):
     list = {"items": []}
-    # json fileの読み込み
     if os.path.isfile("items.json"):
         with open("items.json") as f:
             list = json.load(f)
@@ -37,6 +36,15 @@ def add_item(name: str = Form(...), category: str = Form(...)):
         json.dump(list, f)
     logger.info(f"Receive item: {name}")
     return {"message": f"item received: {name}"}
+
+
+@app.get("/items")
+def get_item():
+    list = {"items": []}
+    if os.path.isfile("items.json"):
+        with open("items.json") as f:
+            list = json.load(f)
+    return list
 
 
 @app.get("/image/{items_image}")
