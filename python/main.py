@@ -102,3 +102,22 @@ async def get_image(items_image):
         image = images / "default.jpg"
 
     return FileResponse(image)
+
+
+@app.get("/items/{item_id}")
+def get_item_id(item_id: str):
+    conn = sqlite3.connect("../db/mercari.sqlite3")
+    c = conn.cursor()
+    result = c.execute(
+        "SELECT name, category, image FROM items WHERE id like (?)",
+        (f"%{item_id}%",),
+    ).fetchall()
+    list = {
+        "items": [
+            {"name": name, "category": category, "image": image}
+            for name, category, image in result
+        ]
+    }
+    conn.commit()
+    conn.close()
+    return list
