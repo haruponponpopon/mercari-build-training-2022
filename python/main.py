@@ -2,6 +2,7 @@ import os
 import logging
 import pathlib
 import sqlite3
+import hashlib
 from fastapi import FastAPI, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,7 +27,7 @@ def root():
 
 
 @app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...)):
+def add_item(name: str = Form(...), category: str = Form(...), image: str = Form(...)):
     # データベースに接続する
     conn = sqlite3.connect("../db/mercari.sqlite3")
     c = conn.cursor()
@@ -34,10 +35,13 @@ def add_item(name: str = Form(...), category: str = Form(...)):
     c.execute("SELECT COUNT(*) FROM sqlite_master WHERE TYPE='table' AND name='items'")
     if c.fetchone()[0] == 0:  # テーブルが存在していなかったらテーブルを作成
         c.execute(
-            "CREATE TABLE items(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,category TEXT)"
+            "CREATE TABLE items(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,category TEXT, image TEXT)"
         )
     # データの挿入
-    c.execute("INSERT INTO items(name,category) values (?, ?)", (name, category))
+    c.execute(
+        "INSERT INTO items(name,category,image) values (?, ?, ?)",
+        (name, category, hashlib.sha256(image.encode("utf-8")).hexdigest() + ".jpg"),
+    )
 
     # 挿入した結果を保存（コミット）する
     conn.commit()
@@ -54,9 +58,12 @@ def get_item():
     c = conn.cursor()
 
     # データの取得
-    result = c.execute("SELECT name, category FROM items").fetchall()
+    result = c.execute("SELECT name, category, image FROM items").fetchall()
     list = {
-        "items": [{"name": name, "category": category} for name, category in result]
+        "items": [
+            {"name": name, "category": category, "image": image}
+            for name, category, image in result
+        ]
     }
     # 挿入した結果を保存（コミット）する
     conn.commit()
