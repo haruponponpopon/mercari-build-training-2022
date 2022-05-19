@@ -66,6 +66,22 @@ def get_item():
     return list
 
 
+@app.get("/search")
+def search_item(keyword: str):
+    conn = sqlite3.connect("../db/mercari.sqlite3")
+    c = conn.cursor()
+    result = c.execute(
+        "SELECT name, category FROM items WHERE name like (?)",
+        (f"%{keyword}%",),
+    ).fetchall()
+    list = {
+        "items": [{"name": name, "category": category} for name, category in result]
+    }
+    conn.commit()
+    conn.close()
+    return list
+
+
 @app.get("/image/{items_image}")
 async def get_image(items_image):
     # Create image path
