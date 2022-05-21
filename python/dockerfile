@@ -1,4 +1,18 @@
-FROM alpine
+FROM python
 
+# 作業ディレクトリを /myapp に設定
+WORKDIR /myapp
+
+# 必要なファイルをコンテナ内の /myapp にコピー
+ADD requirements.txt /myapp
+ADD main.py /myapp
+
+# requirements.txt でインストール
+RUN pip install -r requirements.txt
+
+RUN pip install -r requirements.txt
 # STEP4-4では以下は変更しない
-CMD ["python", "-V"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]
+# #$cd python
+# #$docker build -t build2022/app:latest .
+# #$docker run -d -p 9000:9000 build2022/app:latest
